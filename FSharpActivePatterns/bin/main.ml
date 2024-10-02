@@ -2,8 +2,8 @@
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
 
-open Fsharp_active_patterns_lib.AST
-open Fsharp_active_patterns_lib.PrintAST
+open FSharpActivePatterns.AST
+open FSharpActivePatterns.PrintAST
 
 let () =
   let factorial =
