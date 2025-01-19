@@ -462,7 +462,7 @@ let rec decompose_arrow typ =
   | _ -> [], typ
 ;;
 
-let rec find_return_type typ =
+let find_return_type typ =
   let _, return_t = decompose_arrow typ in
   return_t
 ;;
