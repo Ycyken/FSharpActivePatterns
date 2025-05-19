@@ -1,121 +1,91 @@
-# ФП 2024. Репо для домашек
+# An interpeter for a subset of F# with Active Patterns
 
-Домашки по курсу ФП 2024 оформлять **в виде пулл-реквестов к этому репо**.
-Если у вас уже был PR с некоторой подзадачей, допушивать изменения надо в тот PR. Создавать новый c тем же самым неправильно, нельзя, запрещено.
+This is a homework for a functional programming course.
 
-Учебная группа имеет чатик в мессенджере. Все вопросы писать туда. В личку писать нельзя -- буду банить.
+## Language features done
 
-В директории `/Lambda` лежит шаблон-скелет, его нужно скопипастить и исправить под свои нужды:
-- Указать автора (я должен быть способен сопоставить решение с ФИО в ведомости)
-- Переименовать проект под свой мини-язык и пересобрать dune'ой. CI при сборке ожидает имя проекта, совпадающее с именем директории. **И так как имя проекта это `[a-zA-Z_]+`, то у директорий с пробелами и символами `#` шансов пройти CI нет**
-- Cделать реализацию. Разработку рекомендуется вести итеративной моделью, а не водопадной.
-- Изменять или удалять шаблон `Lambda` нельзя (буду рисовать минус баллы).
+- Standard data types:
+  - bool
+  - int
+  - string
+  - unit
+  - list
+  - option
+- Standard binary and unary operators
+- Recursive functions
+  - First-class functions with partial application and mutual recursion
+  - Closures
+  - Carrying
+- Anonymous functions
+- Nested let bingings
+- Standard function for integer printing
+- Pattern matching
+- Active Patterns
+- Explicit type annotations
 
-Ожидается примерно следующая структура репозитория
-- `/Lambda` -- шаблон проекта домашки, который редактирует только препод (вам необходимо будет его скопировать и переименовать, редактировать нельзя, удалившим его буду ставить минус баллы);
-- `/CSharpExc` -- реализация мини-С# c исключениями, на основе шаблона `/Lambda`;
-- `/Java` -- реализация мини-Java, снова на основе шаблона `/Lambda`;
-- и т.д.
+## Implementation components
 
-Для Merge Requests (a.k.a. pull requests) настроен CI, который смотрит *в какой директории* (проекте) *произошли последние изменения*,
-*и именно в этой директории запускает сборку и тесты*.
-Например, если поменялся файл `Lambda/src/Parser.ml`, то запустятся все тесты из директории проекта `Lambda`,
-а тесты из проекта `Java` запускаться не будут.
+- AST
+- Parser
+- Type inferencer / checker
+- Interpreter
 
+There is also implemented:
 
-Также CI собирает документацию к миниязыку и выкладывает её в https://kakadu.github.io/fp2024/doc/LANGUAGE (например, [вот так](https://kakadu.github.io/fp2024/doc/Lambda)).
-А ещё измеряется покрытие тестами (например, [так](https://kakadu.github.io/fp2024/cov/Lambda)).
+- REPL
+- Property-based testing: parser ∘ prettyPrinter ≡ id (parser and prettyPrinter composition produce the same AST) with [qcheck](https://github.com/c-cube/qcheck)
 
-###### N.B. Не удаляйте директорию Lambda. Это шаблон!
+## Quick start
 
+### Opam
 
-### Подготовка окружения
+1. Install [opam](https://opam.ocaml.org/)
 
-Далее инструкции по найстройки всего под GNU/Linux. Но на Windows+WSL2 тоже должно работать.
+2. Install dependencies
 
-Во-первых, нужен пакетный менеджер opam версии 2.х. С помощью него будем устанавливать OCaml 4.14.1 и необходимые пакеты.
-Системный OCaml (установленный, например, из репозиториев Ubuntu) использовать не рекомендуется.
-
-После установки opam следует его проинициализировать и установить правильный компилятор (у меня обычно вместо SWITCHNAME используется `4.14.2+flambda`)
-
-Для opam >= 2.1:
-
+```bash
     opam init --bare
     opam update
-    opam switch create SWITCHNAME --packages=ocaml-variants.4.14.2+options,ocaml-option-flambda --yes
+    opam switch create Fsharp --packages=ocaml-variants.4.14.2+options,ocaml-option-flambda --yes
+    make deps
+```
 
-Перед этим можно удалить другие switch'и, если они есть, с помощью команды `opam switch remove SWITCHNAME`.
+Opam will suggest you to update your bash (zsh) configuration to automatically set up the environment.
 
-После установки у вас будет рабочий компилятор по-умолчанию в директории `~/.opam/SWITCHNAME/bin`. В конце установки opam вам предложит что-то добавить в ~/.bashrc, чтобы пути к компилятору автоматически подхватывались. Рекомендую это сделать.
+3. Run interpeter with
 
-Если что-то пошло не так, то всегда можно указать нужный свитч руками командой, например:
+```bash
+dune exec repl
+```
 
-    export OPAMSWITCH=SWITCHNAME && eval $(opam env)
+And type
 
-и затем убедиться, что путь до компилятора правильный
+```fsharp
+let (|Big|Small|) input = if input > 10 then Big(input) else Small(input);;
+# val |Big|Small| : int -> Choice<Big (int), Small (int)> = <fun>
 
-    $ which ocamlopt
-    /home/username/.opam/SWITCHNAME/bin/ocamlopt
+let f g x = match x with
+| Big(x) -> Some(g x)
+| _ -> None;;
+# val f : (int -> '9) -> int -> '9 option = <fun>
 
+let carried_f = f (fun x -> x * 2);;
+# val carried_f : int -> int option = <fun>
 
-#### VsCode
+carried_f 20;;
+# val - : int option = Some 40
 
-В процессе работы вам также понадобится пакеты из опам в том числе для разработки в VsCode.
-Скорее всего необходимый минимум установится с помощью `make deps`
+carried_f 5;;
+# val - : int option = None
+```
 
-     $ which ocamlformat
-     /home/username/.opam/SWITCHNAME/bin/ocamlformat
+Or from file (file must not contain `;;` separator) with
 
-Когда вы будете запускать VsCode, то информация об  окружении opam из файла `~/.bashrc` автоматически применяться не будет, потому что так это работает в UNIX системах из покон веков.
-Чтобы облегчить себе возню с окружением, рекомендуется пользоваться утилитой `direnv`.
-Подробнее читать [here](https://ocaml.org/docs/opam-path#using-direnv).
+```bash
+dune exec repl -from input.fs
+```
 
-Если `direnv` пока не установили, но хочется попробовать VsCode, то нужно его запускать из-под opam командой `opam exec -- code`, либо прописать в месте запуска правильную переменную среды OPAMSWITCH, и запускать opam через sh: `sh -c 'eval $(opam env) && code'`
+## Authors
 
-Когда VsCode запустится, её плагин https://marketplace.visualstudio.com/items?itemName=ocamllabs.ocaml-platform слева снизу должен показать, что правильная версия компилятора подцепилась.
-
-![alt text](https://github.com/Kakadu/fp2024/blob/master/vscode.png?raw=true)
-
-
-Необходимо также в VsCode включить автоформатирование: `Settings`->`Text Editor`->`Formatting`->`Format On Paste` и `Format on Save`.
-
-### Приёмка задач
-
-Система оценивания подробно описана в [`grading.md`](grading.md).
-
-Решения принимаются в виде пулл-реквестов к этому репо.
-* В названии надо указать задачу, которую реализовывали, идентифицировать себя (фамилия, имя и курс, если возможны неоднозначности).
-* Пулл-реквесты должны проходить CI
-  * Ворнинги и ошибки компилятора должны быть исправлены
-  * В том числе линтер (его замечания **нужно** исправлять);
-  * проверку, что автоформатирование через ocamlformat настроено и соблюдается;
-  * Все мои замечания по коду должны быть исправлены.
-        - Если уверены, что  исправили, пометьте как resolved
-        - Если не уверены или они непонятны/некорректны, то опишитесь в комменте
-
-  * [DCO](https://github.com/apps/dco); скорее всего осилить [Git aliases](https://gist.github.com/josegonzalez/565837) и добавить +1 сокращение будет достаточно:
-
-        ````
-        [alias]
-            ci = commit -s
-        ````
-
-* К дереву абстрактного синтаксиса (AST) должны быть написаны комменты, какой конструтор за что отвечает. (Например, [как здесь](https://github.com/ocaml/ocaml/blob/4.14/parsing/parsetree.mli#L323).)
-* Используйте [quoted string literals](https://batsov.com/articles/2023/04/20/learning-ocaml-quoted-string-literals), чтобы не экранировать длинные строки руками
-
-    ````
-    let quoted_greeting = {|"Hello, World!"|}
-    val quoted_greeting : string = "\"Hello, World!\""
-    ````
-
-* Да, объекты и присваивание запрещены.
-* Иимена типов и функций -- snake_case
-* Имена типов модулей и модулей -- CamelCase
-
-Тесты нужны, чтобы убедить преподавателя, что вы таки запускали свою поделку на адекватных примерах.
-Большинство тестов будут интеграционные: запустил самописный интерпретатор миниязыка и сравнил с результатом (например, с поведением интерпретатора оригинального языка).
-В CI измеряeтся тестовое покрытие в процентах. Чем больше покрытие --- тем лучше.
-Если код не вызывается в тестах, то либо он не нужен, либо на него не написан тест, либо (в редких случаях) это бага `ppx_bisect`, который измеряет покрытие. Чтобы покрытие тестами таки считалось, не забывайте приписывать к своим библиотекам/исполняемым файлом заклинание в dune-файлах:
-
-    (instrumentation
-      (backend bisect_ppx))
+- [Ksenia Kotelnikova](https://github.com/p1onerka)
+- [Gleb Nasretdinov](https://github.com/Ycyken)

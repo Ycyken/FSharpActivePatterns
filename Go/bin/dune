@@ -1,6 +1,0 @@
-(executable
- (name repl)
- (public_name repl)
- (libraries ast parse)
- (instrumentation
-  (backend bisect_ppx)))

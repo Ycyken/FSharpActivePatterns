@@ -1,0 +1,20 @@
+(cram
+ (applies_to qcheck)
+ (deps ../lib/tests/run_qcheck.exe))
+
+(cram
+ (applies_to interpret_manytests)
+ (deps
+  ../bin/REPL.exe
+  (glob_files manytests/do_not_type/*.fs)
+  (glob_files manytests/typed/*.fs)))
+
+(cram
+ (applies_to activePatterns)
+ (deps ../bin/REPL.exe activepatterns/choices.fs activepatterns/simple.fs))
+
+(cram
+ (applies_to interpret)
+ (deps
+  ../bin/REPL.exe
+  (glob_files interpreter_tests/*.fs)))

@@ -1,7 +1,0 @@
-(cram
- (applies_to factorial_test)
- (deps ../repl/REPL.exe ../examples/factorial/factorial.s))
-
-(cram
- (applies_to qc)
- (deps ../quickcheck/quickcheck.exe))
